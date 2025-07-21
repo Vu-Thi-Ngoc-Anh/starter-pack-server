@@ -18,7 +18,12 @@ app.use(express.static(path.join(__dirname)));
 // Load/saves tokens
 function loadTokens() {
   if (!fs.existsSync(TOKENS_FILE)) return [];
-  return JSON.parse(fs.readFileSync(TOKENS_FILE));
+  try {
+    return JSON.parse(fs.readFileSync(TOKENS_FILE));
+  } catch (e) {
+    console.error("Lỗi khi đọc tokens.json:", e);
+    return [];
+  }
 }
 
 function saveTokens(tokens) {
