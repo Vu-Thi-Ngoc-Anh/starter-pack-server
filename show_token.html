@@ -56,7 +56,12 @@
   <div id="result"></div>
 
   <script>
-    async function getToken() {
+  async function getToken() {
+    const button = document.querySelector("button");
+    button.disabled = true;
+    button.innerText = "Loading...";
+
+    try {
       const res = await fetch('https://starter-pack-server.onrender.com/generate-token', {
         method: 'POST'
       });
@@ -65,12 +70,19 @@
       if (data.success) {
         document.getElementById('result').innerHTML =
           `<b>Your token:</b> <code>${data.token}</code><br>
-           Enter this code in the game to claim your Starter Pack.<br><br>
-           <i>Note: Each token can only be used once.</i>`;
+          Enter this code in the game to claim your Starter Pack.<br><br>
+          <i>Note: Each token can only be used once.</i>`;
       } else {
         document.getElementById('result').textContent = "⚠️ Error: Unable to generate token.";
       }
+    } catch (err) {
+      document.getElementById('result').textContent = "⚠️ Server error. Please try again later.";
+    } finally {
+      button.disabled = false;
+      button.innerText = "Get Token";
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
