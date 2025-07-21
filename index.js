@@ -41,4 +41,9 @@ app.post('/verify-token', (req, res) => {
   res.json({ success: true, message: 'Token hợp lệ' });
 });
 
+app.get("/", (req, res) => {
+  res.send("🟢 Starter Pack Server is running!");
+});
+
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
