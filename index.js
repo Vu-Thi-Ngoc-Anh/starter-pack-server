@@ -6,10 +6,10 @@ const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const TOKENS_FILE = './tokens.json';
+
 app.use(cors());
 app.use(express.json());
-
-const TOKENS_FILE = './tokens.json';
 
 function loadTokens() {
   if (!fs.existsSync(TOKENS_FILE)) return [];
@@ -20,40 +20,40 @@ function saveTokens(tokens) {
   fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
 }
 
-// ✅ API tạo token mới cho 1 người chơi (sau khi thanh toán)
+// Tạo mã code duy nhất
+function generateUniqueCode(tokens) {
+  let code;
+  do {
+    code = uuidv4().split('-')[0]; // dùng phần đầu của uuid (ngắn gọn hơn)
+  } while (tokens.some(t => t.token === code));
+  return code;
+}
+
+// API tạo token mới
 app.post('/generate-token', (req, res) => {
-  const { uid } = req.body;
-  if (!uid) return res.status(400).json({ error: 'Thiếu UID' });
-
-  const code = uuidv4().split('-')[0]; // Mã ngắn gọn
-  const fullToken = `${code}+${uid}`;
-
-  let tokens = loadTokens();
-  tokens.push({ token: fullToken });
+  const tokens = loadTokens();
+  const newToken = generateUniqueCode(tokens);
+  tokens.push({ token: newToken });
   saveTokens(tokens);
-
-  res.json({ success: true, token: fullToken });
+  res.json({ success: true, token: newToken });
 });
 
-// ✅ API xác minh token và xóa sau khi dùng
+// API xác minh token
 app.post('/verify-token', (req, res) => {
   const { token } = req.body;
-  if (!token) return res.status(400).json({ error: 'Thiếu token' });
+  const tokens = loadTokens();
+  const found = tokens.find(t => t.token === token);
+  if (!found) return res.json({ success: false, message: 'Token không hợp lệ' });
 
-  let tokens = loadTokens();
-  const index = tokens.findIndex(t => t.token === token);
-  if (index === -1) return res.json({ success: false, message: 'Token không hợp lệ hoặc đã dùng' });
-
-  const usedToken = tokens[index];
-  tokens.splice(index, 1); // Xoá token đã dùng
-  saveTokens(tokens);
-
-  res.json({ success: true, message: 'Token hợp lệ', token: usedToken.token });
+  // Nếu hợp lệ thì xóa khỏi danh sách
+  const updatedTokens = tokens.filter(t => t.token !== token);
+  saveTokens(updatedTokens);
+  res.json({ success: true, message: 'Token hợp lệ và đã được sử dụng' });
 });
 
-// ✅ Trang chính
+// Route mặc định
 app.get("/", (req, res) => {
-  res.send("🟢 Starter Pack Server is running!");
+  res.send("🟢 Starter Pack Server is running on Render!");
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
