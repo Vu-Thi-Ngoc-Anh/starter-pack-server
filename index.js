@@ -60,4 +60,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'show_token.html'));
 });
 
+// Phục vụ file tĩnh từ thư mục hiện tại
+app.use(express.static(__dirname));
+
+
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
