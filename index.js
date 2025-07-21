@@ -95,7 +95,6 @@ app.post('/verify-token', async (req, res) => {
   res.json({ success: true, message: 'Token hợp lệ và đã được sử dụng' });
 });
 
-// Trang frontend
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'show_token.html'));
 });
