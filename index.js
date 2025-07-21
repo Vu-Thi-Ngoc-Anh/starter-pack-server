@@ -14,7 +14,8 @@ const TOKEN_KEY = "StarterPackTokens";
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // thư mục giao diện
+app.use('/panel.png', express.static(path.join(__dirname, 'panel.png')));
+
 
 // Load token từ PlayFab
 async function loadTokensFromPlayFab() {
