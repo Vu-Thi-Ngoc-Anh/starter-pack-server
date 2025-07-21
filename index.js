@@ -15,7 +15,7 @@ const TOKEN_KEY = "StarterPackTokens";
 app.use(cors());
 app.use(express.json());
 app.use('/panel.png', express.static(path.join(__dirname, 'panel.png')));
-
+console.log("[ENV ALL]", process.env);
 console.log("[ENV] Title ID:", PLAYFAB_TITLE_ID);
 console.log("[ENV] Secret Key:", PLAYFAB_SECRET_KEY ? "Đã có" : "Không có");
 
