@@ -16,6 +16,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/panel.png', express.static(path.join(__dirname, 'panel.png')));
 
+console.log("[ENV] Title ID:", PLAYFAB_TITLE_ID);
+console.log("[ENV] Secret Key:", PLAYFAB_SECRET_KEY ? "Đã có" : "Không có");
 
 // Load token từ PlayFab
 async function loadTokensFromPlayFab() {
@@ -30,8 +32,6 @@ async function loadTokensFromPlayFab() {
         }
       }
     );
-    console.log("[ENV] Title ID:", PLAYFAB_TITLE_ID);
-    console.log("[ENV] Secret Key:", PLAYFAB_SECRET_KEY ? "Đã có" : "Không có");
     const data = res.data.Data;
     if (!data || !data[TOKEN_KEY]) return [];
     return JSON.parse(data[TOKEN_KEY]);
