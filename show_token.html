@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Starter Pack Token</title>
+  <style>
+    body {
+      background-image: url('panel.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-shadow: 1px 1px 3px black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #ff9900;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background-color: #cc7a00;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      background-color: rgba(0,0,0,0.6);
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎉 Thank you for purchasing the Pack!</h2>
+  <p>Click the button below to receive your activation token:</p>
+
+  <button onclick="getToken()">Get Token</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function getToken() {
+      const res = await fetch('https://starter-pack-server.onrender.com/generate-token', {
+        method: 'POST'
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('result').innerHTML =
+          `<b>Your token:</b> <code>${data.token}</code><br>
+           Enter this code in the game to claim your Starter Pack.<br><br>
+           <i>Note: Each token can only be used once.</i>`;
+      } else {
+        document.getElementById('result').textContent = "⚠️ Error: Unable to generate token.";
+      }
+    }
+  </script>
+</body>
+</html>
