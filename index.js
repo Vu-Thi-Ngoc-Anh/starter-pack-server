@@ -73,15 +73,21 @@ function generateUniqueCode(tokens) {
 app.post('/generate-token', async (req, res) => {
   try {
     const tokens = await loadTokensFromPlayFab();
+    console.log("🎯 Existing tokens:", tokens);
+
     const newToken = generateUniqueCode(tokens);
+    console.log("🆕 Generated token:", newToken);
+
     tokens.push(newToken);
     await saveTokensToPlayFab(tokens);
+
     res.json({ success: true, token: newToken });
   } catch (err) {
     console.error("Lỗi ở /generate-token:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 // API: Xác minh token
 app.post('/verify-token', async (req, res) => {
