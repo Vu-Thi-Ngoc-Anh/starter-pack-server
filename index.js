@@ -3,10 +3,22 @@ const path = require('path');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
 const axios = require('axios');
-require('dotenv').config();
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Load thủ công file .env nếu chạy trên Render
+const envPath = '/etc/secrets/.env';
+if (fs.existsSync(envPath)) {
+  const envData = fs.readFileSync(envPath, 'utf-8');
+  envData.split('\n').forEach(line => {
+    const [key, value] = line.trim().split('=');
+    if (key && value && !process.env[key]) {
+      process.env[key] = value;
+    }
+  });
+}
 
 const PLAYFAB_TITLE_ID = process.env.PLAYFAB_TITLE_ID;
 const PLAYFAB_SECRET_KEY = process.env.PLAYFAB_SECRET_KEY;
@@ -15,7 +27,7 @@ const TOKEN_KEY = "StarterPackTokens";
 app.use(cors());
 app.use(express.json());
 app.use('/panel.png', express.static(path.join(__dirname, 'panel.png')));
-console.log("[ENV ALL]", process.env);
+
 console.log("[ENV] Title ID:", PLAYFAB_TITLE_ID);
 console.log("[ENV] Secret Key:", PLAYFAB_SECRET_KEY ? "Đã có" : "Không có");
 
@@ -89,7 +101,6 @@ app.post('/generate-token', async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
 
 // API: Xác minh token
 app.post('/verify-token', async (req, res) => {
