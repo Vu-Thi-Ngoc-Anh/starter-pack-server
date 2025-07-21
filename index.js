@@ -41,12 +41,18 @@ function generateUniqueCode(tokens) {
 
 // Tạo token mới
 app.post('/generate-token', (req, res) => {
-  const tokens = loadTokens();
-  const newToken = generateUniqueCode(tokens);
-  tokens.push({ token: newToken });
-  saveTokens(tokens);
-  res.json({ success: true, token: newToken });
+  try {
+    const tokens = loadTokens();
+    const newToken = generateUniqueCode(tokens);
+    tokens.push({ token: newToken });
+    saveTokens(tokens);
+    res.json({ success: true, token: newToken });
+  } catch (err) {
+    console.error("Lỗi ở /generate-token:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 });
+
 
 // Xác minh token
 app.post('/verify-token', (req, res) => {
