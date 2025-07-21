@@ -1,51 +1,79 @@
 const express = require('express');
-const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const TOKENS_FILE = './tokens.json';
+const PLAYFAB_TITLE_ID = process.env.PLAYFAB_TITLE_ID;
+const PLAYFAB_SECRET_KEY = process.env.PLAYFAB_SECRET_KEY;
+const TOKEN_KEY = "StarterPackTokens";
 
 app.use(cors());
 app.use(express.json());
-
-// 👇 Cho phép phục vụ các file tĩnh như show_token.html, panel.png
 app.use(express.static(path.join(__dirname)));
 
-// Load/saves tokens
-function loadTokens() {
-  if (!fs.existsSync(TOKENS_FILE)) return [];
+// Gọi API đọc TitleData
+async function loadTokensFromPlayFab() {
   try {
-    return JSON.parse(fs.readFileSync(TOKENS_FILE));
-  } catch (e) {
-    console.error("Lỗi khi đọc tokens.json:", e);
+    const res = await axios.post(
+      `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Admin/GetTitleData`,
+      { Keys: [TOKEN_KEY] },
+      {
+        headers: {
+          "X-SecretKey": PLAYFAB_SECRET_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    const data = res.data.data.Data;
+    if (!data || !data[TOKEN_KEY]) return [];
+    return JSON.parse(data[TOKEN_KEY]);
+  } catch (err) {
+    console.error("Lỗi khi load token từ PlayFab:", err.response?.data || err);
     return [];
   }
 }
 
-function saveTokens(tokens) {
-  fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+// Gọi API lưu TitleData
+async function saveTokensToPlayFab(tokens) {
+  try {
+    await axios.post(
+      `https://${PLAYFAB_TITLE_ID}.playfabapi.com/Admin/SetTitleData`,
+      {
+        Key: TOKEN_KEY,
+        Value: JSON.stringify(tokens)
+      },
+      {
+        headers: {
+          "X-SecretKey": PLAYFAB_SECRET_KEY,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+  } catch (err) {
+    console.error("Lỗi khi lưu token lên PlayFab:", err.response?.data || err);
+  }
 }
 
-// Generate unique token
 function generateUniqueCode(tokens) {
   let code;
   do {
     code = uuidv4().split('-')[0];
-  } while (tokens.some(t => t.token === code));
+  } while (tokens.includes(code));
   return code;
 }
 
 // Tạo token mới
-app.post('/generate-token', (req, res) => {
+app.post('/generate-token', async (req, res) => {
   try {
-    const tokens = loadTokens();
+    const tokens = await loadTokensFromPlayFab();
     const newToken = generateUniqueCode(tokens);
-    tokens.push({ token: newToken });
-    saveTokens(tokens);
+    tokens.push(newToken);
+    await saveTokensToPlayFab(tokens);
     res.json({ success: true, token: newToken });
   } catch (err) {
     console.error("Lỗi ở /generate-token:", err);
@@ -53,26 +81,22 @@ app.post('/generate-token', (req, res) => {
   }
 });
 
-
 // Xác minh token
-app.post('/verify-token', (req, res) => {
+app.post('/verify-token', async (req, res) => {
   const { token } = req.body;
-  const tokens = loadTokens();
-  const found = tokens.find(t => t.token === token);
-  if (!found) return res.json({ success: false, message: 'Token không hợp lệ' });
-
-  const updatedTokens = tokens.filter(t => t.token !== token);
-  saveTokens(updatedTokens);
+  const tokens = await loadTokensFromPlayFab();
+  const index = tokens.indexOf(token);
+  if (index === -1) {
+    return res.json({ success: false, message: 'Token không hợp lệ' });
+  }
+  tokens.splice(index, 1);
+  await saveTokensToPlayFab(tokens);
   res.json({ success: true, message: 'Token hợp lệ và đã được sử dụng' });
 });
 
-// 👇 Route gốc sẽ chuyển tới show_token.html
+// Trang hiển thị token
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'show_token.html'));
 });
-
-// Phục vụ file tĩnh từ thư mục hiện tại
-app.use(express.static(__dirname));
-
 
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
