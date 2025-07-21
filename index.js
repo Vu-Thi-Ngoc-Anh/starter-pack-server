@@ -30,6 +30,8 @@ async function loadTokensFromPlayFab() {
         }
       }
     );
+    console.log("[ENV] Title ID:", PLAYFAB_TITLE_ID);
+    console.log("[ENV] Secret Key:", PLAYFAB_SECRET_KEY ? "Đã có" : "Không có");
     const data = res.data.Data;
     if (!data || !data[TOKEN_KEY]) return [];
     return JSON.parse(data[TOKEN_KEY]);
